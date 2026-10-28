@@ -9,11 +9,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }));
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // On utilise notre fonction sécurisée au lieu de worker.start() directement
-      const { startMockWorker } = require("@/mocks/browser");
-      startMockWorker();
-    }
+    // Import dynamique pour éviter les erreurs de build côté serveur
+    const initMsw = async () => {
+      if (typeof window !== "undefined") {
+        const { startMockWorker } = await import("@/mocks/browser");
+        await startMockWorker();
+      }
+    };
+    initMsw();
   }, []);
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;

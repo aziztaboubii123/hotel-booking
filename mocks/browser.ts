@@ -3,16 +3,14 @@ import { handlers } from "./handlers";
 
 export const worker = setupWorker(...handlers);
 
-// On stocke la promesse pour ne jamais relancer le worker s'il tourne déjà
-let startPromise: ReturnType<typeof worker.start> | undefined;
+let isStarted = false;
 
-export function startMockWorker() {
-  if (!startPromise) {
-    startPromise = worker.start({ onUnhandledRequest: "bypass" }).catch((error) => {
-      // Si ça échoue, on réinitialise pour pouvoir réessayer
-      startPromise = undefined;
-      throw error;
-    });
+export async function startMockWorker() {
+  if (typeof window !== "undefined" && !isStarted) {
+    isStarted = true;
+    // Le "as any" force TypeScript à ignorer l'erreur de typage stricte
+    await worker.start({
+      onUnhandledRequest: "bypass",
+    } as any);
   }
-  return startPromise;
 }
